@@ -162,6 +162,16 @@ sing_box_cf_add_proxy_outbound() {
             "$obfuscator_password" "$upload_mbps" "$download_mbps")
         config=$(_add_outbound_security "$config" "$tag" "$url")
         ;;
+    anytls)
+        local tag host port password
+        tag=$(get_outbound_tag_by_section "$section")
+        host=$(url_get_host "$url")
+        port=$(url_get_port "$url")
+        password=$(url_get_userinfo "$url")
+
+        config=$(sing_box_cm_add_anytls_outbound "$config" "$tag" "$host" "$port" "$password")
+        config=$(_add_outbound_security "$config" "$tag" "$url")
+        ;;
     *)
         log "Unsupported proxy $scheme type. Aborted." "fatal"
         exit 1
@@ -180,7 +190,7 @@ _add_outbound_security() {
     security=$(url_get_query_param "$url" "security")
     if [ -z "$security" ]; then
         scheme="$(url_get_scheme "$url")"
-        if [ "$scheme" = "hysteria2" ] || [ "$scheme" = "hy2" ]; then
+        if [ "$scheme" = "hysteria2" ] || [ "$scheme" = "hy2" ] || [ "$scheme" = "anytls" ]; then
             security="tls"
         fi
     fi
