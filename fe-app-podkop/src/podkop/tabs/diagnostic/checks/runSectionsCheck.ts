@@ -63,9 +63,17 @@ export async function runSectionsCheck() {
             }
 
             if (isDirect) {
+              const directLatency = await PodkopShellMethods.getClashApiProxyLatency(
+                selectedOutbound?.code ?? 'direct-out',
+              );
+
+              const directSuccess = directLatency.success && !directLatency.data.message;
+
               return {
-                success: true,
-                latency: `[${selectedOutbound?.displayName ?? 'Direct'}] OK`,
+                success: directSuccess,
+                latency: directSuccess
+                  ? `[${selectedOutbound?.displayName ?? 'Direct'}] ${directLatency.data.delay}ms`
+                  : `[${selectedOutbound?.displayName ?? 'Direct'}] ${_('Not responding')}`,
               };
             }
 
