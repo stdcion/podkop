@@ -70,6 +70,8 @@ export const DNS_SERVER_OPTIONS = {
   '1.1.1.1': '1.1.1.1 (Cloudflare)',
   '8.8.8.8': '8.8.8.8 (Google)',
   '9.9.9.9': '9.9.9.9 (Quad9)',
+  '77.88.8.8': '77.88.8.8 (Yandex)',
+  'common.dot.dns.yandex.net': 'common.dot.dns.yandex.net (Yandex)',
   'dns.adguard-dns.com': 'dns.adguard-dns.com (AdGuard Default)',
   'unfiltered.adguard-dns.com':
     'unfiltered.adguard-dns.com (AdGuard Unfiltered)',
