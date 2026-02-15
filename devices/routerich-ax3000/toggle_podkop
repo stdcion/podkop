@@ -1,0 +1,48 @@
+#!/bin/sh
+
+LED_PATH="/sys/class/leds/blue:mesh"
+
+led_on() {
+    echo "default-on" > "$LED_PATH/trigger"
+    echo 1 > "$LED_PATH/brightness"
+}
+
+led_off() {
+    echo "default-on" > "$LED_PATH/trigger"
+    echo 0 > "$LED_PATH/brightness"
+}
+
+led_blink() {
+    echo "timer" > "$LED_PATH/trigger"
+    echo 10 > "$LED_PATH/delay_on"
+    echo 10 > "$LED_PATH/delay_off"
+}
+
+toggle() {
+    led_blink
+
+    if /etc/init.d/podkop enabled; then
+        /etc/init.d/podkop stop
+        /etc/init.d/podkop disable
+        led_off
+    else
+        /etc/init.d/podkop enable
+        /etc/init.d/podkop start
+        led_on
+    fi
+}
+
+case "$1" in
+    toggle) toggle ;;
+    on)
+        /etc/init.d/podkop enable
+        /etc/init.d/podkop start
+        led_on
+        ;;
+    off)
+        /etc/init.d/podkop stop
+        /etc/init.d/podkop disable
+        led_off
+        ;;
+    *) echo "Usage: $0 {toggle|on|off}" ;;
+esac
