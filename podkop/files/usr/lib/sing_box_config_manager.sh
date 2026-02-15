@@ -723,6 +723,40 @@ sing_box_cm_add_hysteria2_outbound() {
 }
 
 #######################################
+# Add an AnyTLS outbound to a sing-box JSON configuration.
+# Arguments:
+#   config: string (JSON), sing-box configuration to modify
+#   tag: string, identifier for the outbound
+#   server_address: string, IP address or hostname of the AnyTLS server
+#   server_port: integer, port of the AnyTLS server
+#   password: string, password for authentication
+# Outputs:
+#   Writes updated JSON configuration to stdout
+# Example:
+#   CONFIG=$(sing_box_cm_add_anytls_outbound "$CONFIG" "anytls-out" "example.com" 443 "supersecret")
+#######################################
+sing_box_cm_add_anytls_outbound() {
+    local config="$1"
+    local tag="$2"
+    local server_address="$3"
+    local server_port="$4"
+    local password="$5"
+
+    echo "$config" | jq \
+        --arg tag "$tag" \
+        --arg server_address "$server_address" \
+        --arg server_port "$server_port" \
+        --arg password "$password" \
+        '.outbounds += [{
+          type: "anytls",
+          tag: $tag,
+          server: $server_address,
+          server_port: ($server_port | tonumber),
+          password: $password
+        }]'
+}
+
+#######################################
 # Set gRPC transport settings for an outbound in a sing-box JSON configuration.
 # Arguments:
 #   config: string (JSON), sing-box configuration to modify
