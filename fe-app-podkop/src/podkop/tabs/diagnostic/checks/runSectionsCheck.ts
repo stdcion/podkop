@@ -51,14 +51,38 @@ export async function runSectionsCheck() {
           const success = latencyGroup.success && !latencyGroup.data.message;
 
           if (success) {
-            if (isUrlTest || isFailover) {
+            if (isUrlTest) {
               const latency = Object.values(latencyGroup.data)
-                .map((item) => (item ? `${item}ms` : 'n/a'))
+                .map((item) => (item != null ? `${item}ms` : 'n/a'))
                 .join(' / ');
 
               return {
                 success: true,
-                latency: `[${isUrlTest ? _('Fastest') : _('Active')}] ${latency}`,
+                latency: `[${_('Fastest')}] ${latency}`,
+              };
+            }
+
+            if (isFailover) {
+              const failoverLatency = await PodkopShellMethods.getClashApiGroupLatency(
+                selectedOutbound?.code ?? '',
+              );
+
+              const failoverSuccess = failoverLatency.success && !failoverLatency.data.message;
+
+              if (failoverSuccess) {
+                const latency = Object.values(failoverLatency.data)
+                  .map((item) => (item != null ? `${item}ms` : 'n/a'))
+                  .join(' / ');
+
+                return {
+                  success: true,
+                  latency: `[${_('Active')}] ${latency}`,
+                };
+              }
+
+              return {
+                success: false,
+                latency: `[${_('Active')}] ${_('Not responding')}`,
               };
             }
 
