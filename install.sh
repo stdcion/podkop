@@ -325,6 +325,7 @@ replace_sing_box() {
 
     msg "Replacing sing-box with custom build (failover support)..."
 
+    /etc/init.d/podkop stop 2>/dev/null
     /etc/init.d/sing-box stop 2>/dev/null
 
     local url="https://github.com/stdcion/sing-box/releases/download/latest/$archive_name"
@@ -357,6 +358,7 @@ replace_sing_box() {
         return
     fi
 
+    rm -f "$sing_box_path"
     cp "$DOWNLOAD_DIR/sing-box" "$sing_box_path"
     chmod 755 "$sing_box_path"
 
