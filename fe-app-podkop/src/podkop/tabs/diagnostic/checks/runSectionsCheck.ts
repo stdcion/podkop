@@ -46,6 +46,7 @@ export async function runSectionsCheck() {
 
           const isUrlTest = selectedOutbound?.type === 'URLTest';
           const isFailover = selectedOutbound?.type === 'Failover';
+          const isDirect = selectedOutbound?.type === 'direct';
 
           const success = latencyGroup.success && !latencyGroup.data.message;
 
@@ -58,6 +59,13 @@ export async function runSectionsCheck() {
               return {
                 success: true,
                 latency: `[${isUrlTest ? _('Fastest') : _('Active')}] ${latency}`,
+              };
+            }
+
+            if (isDirect) {
+              return {
+                success: true,
+                latency: `[${selectedOutbound?.displayName ?? 'Direct'}] OK`,
               };
             }
 

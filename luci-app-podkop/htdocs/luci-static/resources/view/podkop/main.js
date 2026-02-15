@@ -3977,6 +3977,7 @@ async function runSectionsCheck() {
           );
           const isUrlTest = selectedOutbound?.type === "URLTest";
           const isFailover = selectedOutbound?.type === "Failover";
+          const isDirect = selectedOutbound?.type === "direct";
           const success3 = latencyGroup.success && !latencyGroup.data.message;
           if (success3) {
             if (isUrlTest || isFailover) {
@@ -3984,6 +3985,12 @@ async function runSectionsCheck() {
               return {
                 success: true,
                 latency: `[${isUrlTest ? _("Fastest") : _("Active")}] ${latency2}`
+              };
+            }
+            if (isDirect) {
+              return {
+                success: true,
+                latency: `[${selectedOutbound?.displayName ?? "Direct"}] OK`
               };
             }
             const selectedProxyDelay = latencyGroup.data?.[selectedOutbound?.code ?? ""];
