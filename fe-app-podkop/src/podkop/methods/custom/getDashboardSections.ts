@@ -154,6 +154,44 @@ export async function getDashboardSections(): Promise<IGetDashboardSectionsRespo
             ],
           };
         }
+
+        if (section.proxy_config_type === 'failover') {
+          const selector = proxies.find(
+            (proxy) => proxy.code === `${section['.name']}-out`,
+          );
+          const outbound = proxies.find(
+            (proxy) => proxy.code === `${section['.name']}-failover-out`,
+          );
+
+          const outbounds = (outbound?.value?.all ?? [])
+            .map((code) => proxies.find((item) => item.code === code))
+            .map((item, index) => ({
+              code: item?.code || '',
+              displayName:
+                getProxyUrlName(section.failover_proxy_links?.[index]) ||
+                item?.value?.name ||
+                '',
+              latency: item?.value?.history?.[0]?.delay || 0,
+              type: item?.value?.type || '',
+              selected: selector?.value?.now === item?.code,
+            }));
+
+          return {
+            withTagSelect: true,
+            code: selector?.code || section['.name'],
+            displayName: section['.name'],
+            outbounds: [
+              {
+                code: outbound?.code || '',
+                displayName: _('Active'),
+                latency: outbound?.value?.history?.[0]?.delay || 0,
+                type: outbound?.value?.type || '',
+                selected: selector?.value?.now === outbound?.code,
+              },
+              ...outbounds,
+            ],
+          };
+        }
       }
 
       if (section.connection_type === 'vpn') {
