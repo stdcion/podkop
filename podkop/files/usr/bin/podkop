@@ -1031,7 +1031,14 @@ configure_community_list_handler() {
     local ruleset_tag format url update_interval detour
     ruleset_tag="$(get_ruleset_tag "$section" "$tag" "community")"
     format="binary"
-    url="$SRS_MAIN_URL/$tag.srs"
+    case "$tag" in
+        twitch)
+            url="https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-twitch.srs"
+            ;;
+        *)
+            url="$SRS_MAIN_URL/$tag.srs"
+            ;;
+    esac
     detour="$(get_download_detour_tag)"
     config_get update_interval "settings" "update_interval" "1d"
 
