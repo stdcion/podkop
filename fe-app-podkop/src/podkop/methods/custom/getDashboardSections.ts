@@ -97,7 +97,9 @@ export async function getDashboardSections(): Promise<IGetDashboardSectionsRespo
             .map((link, index) => ({
               link,
               outbound: proxies.find(
-                (item) => item.code === `${section['.name']}-${index + 1}-out`,
+                (item) => item.code === (link === 'direct://'
+                  ? 'direct-out'
+                  : `${section['.name']}-${index + 1}-out`),
               ),
             }))
             .map((item) => ({
