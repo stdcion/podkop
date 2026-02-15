@@ -662,8 +662,12 @@ configure_outbound_handler() {
 
             i=1
             for link in $selector_proxy_links; do
-                config="$(sing_box_cf_add_proxy_outbound "$config" "$section-$i" "$link" "$udp_over_tcp")"
-                outbound_tag="$(get_outbound_tag_by_section "$section-$i")"
+                if [ "$link" = "$SB_DIRECT_OUTBOUND_SENTINEL" ]; then
+                    outbound_tag="$SB_DIRECT_OUTBOUND_TAG"
+                else
+                    config="$(sing_box_cf_add_proxy_outbound "$config" "$section-$i" "$link" "$udp_over_tcp")"
+                    outbound_tag="$(get_outbound_tag_by_section "$section-$i")"
+                fi
                 if [ -z "$outbound_tags" ]; then
                     outbound_tags="$outbound_tag"
                     default_outbound="$outbound_tag"
@@ -695,8 +699,12 @@ configure_outbound_handler() {
 
             i=1
             for link in $urltest_proxy_links; do
-                config="$(sing_box_cf_add_proxy_outbound "$config" "$section-$i" "$link" "$udp_over_tcp")"
-                outbound_tag="$(get_outbound_tag_by_section "$section-$i")"
+                if [ "$link" = "$SB_DIRECT_OUTBOUND_SENTINEL" ]; then
+                    outbound_tag="$SB_DIRECT_OUTBOUND_TAG"
+                else
+                    config="$(sing_box_cf_add_proxy_outbound "$config" "$section-$i" "$link" "$udp_over_tcp")"
+                    outbound_tag="$(get_outbound_tag_by_section "$section-$i")"
+                fi
                 if [ -z "$outbound_tags" ]; then
                     outbound_tags="$outbound_tag"
                 else
@@ -732,8 +740,12 @@ configure_outbound_handler() {
 
             i=1
             for link in $failover_proxy_links; do
-                config="$(sing_box_cf_add_proxy_outbound "$config" "$section-$i" "$link" "$udp_over_tcp")"
-                outbound_tag="$(get_outbound_tag_by_section "$section-$i")"
+                if [ "$link" = "$SB_DIRECT_OUTBOUND_SENTINEL" ]; then
+                    outbound_tag="$SB_DIRECT_OUTBOUND_TAG"
+                else
+                    config="$(sing_box_cf_add_proxy_outbound "$config" "$section-$i" "$link" "$udp_over_tcp")"
+                    outbound_tag="$(get_outbound_tag_by_section "$section-$i")"
+                fi
                 if [ -z "$outbound_tags" ]; then
                     outbound_tags="$outbound_tag"
                 else

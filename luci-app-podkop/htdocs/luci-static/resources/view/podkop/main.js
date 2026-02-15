@@ -537,6 +537,9 @@ function validateHysteria2Url(url) {
 // src/validators/validateProxyUrl.ts
 function validateProxyUrl(url) {
   const trimmedUrl = url.trim();
+  if (trimmedUrl === "direct://") {
+    return { valid: true, message: _("Valid") };
+  }
   if (trimmedUrl.startsWith("ss://")) {
     return validateShadowsocksUrl(trimmedUrl);
   }
@@ -555,7 +558,7 @@ function validateProxyUrl(url) {
   return {
     valid: false,
     message: _(
-      "URL must start with vless://, ss://, trojan://, socks4/5://, or hysteria2://hy2://"
+      "URL must start with vless://, ss://, trojan://, socks4/5://, hysteria2://hy2://, or be direct://"
     )
   };
 }
@@ -765,7 +768,7 @@ async function getDashboardSections() {
         const outbounds = links.map((link, index) => ({
           link,
           outbound: proxies.find(
-            (item) => item.code === `${section[".name"]}-${index + 1}-out`
+            (item) => item.code === (link === "direct://" ? "direct-out" : `${section[".name"]}-${index + 1}-out`)
           )
         })).map((item) => ({
           code: item?.outbound?.code || "",
@@ -803,6 +806,36 @@ async function getDashboardSections() {
             {
               code: outbound?.code || "",
               displayName: _("Fastest"),
+              latency: outbound?.value?.history?.[0]?.delay || 0,
+              type: outbound?.value?.type || "",
+              selected: selector?.value?.now === outbound?.code
+            },
+            ...outbounds
+          ]
+        };
+      }
+      if (section.proxy_config_type === "failover") {
+        const selector = proxies.find(
+          (proxy) => proxy.code === `${section[".name"]}-out`
+        );
+        const outbound = proxies.find(
+          (proxy) => proxy.code === `${section[".name"]}-failover-out`
+        );
+        const outbounds = (outbound?.value?.all ?? []).map((code) => proxies.find((item) => item.code === code)).map((item, index) => ({
+          code: item?.code || "",
+          displayName: getProxyUrlName(section.failover_proxy_links?.[index]) || item?.value?.name || "",
+          latency: item?.value?.history?.[0]?.delay || 0,
+          type: item?.value?.type || "",
+          selected: selector?.value?.now === item?.code
+        }));
+        return {
+          withTagSelect: true,
+          code: selector?.code || section[".name"],
+          displayName: section[".name"],
+          outbounds: [
+            {
+              code: outbound?.code || "",
+              displayName: _("Active"),
               latency: outbound?.value?.history?.[0]?.delay || 0,
               type: outbound?.value?.type || "",
               selected: selector?.value?.now === outbound?.code
@@ -4785,6 +4818,9 @@ function maskIP(ip = "") {
 
 // src/helpers/getProxyUrlName.ts
 function getProxyUrlName(url) {
+  if (url === "direct://") {
+    return "Direct";
+  }
   try {
     const [_link, hash] = url.split("#");
     if (!hash) {
