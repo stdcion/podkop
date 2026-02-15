@@ -78,23 +78,24 @@ check_requirements() {
     if has_outbound_section; then
         log "Outbound section found" "debug"
     else
-        log "Outbound section not found. Please check your configuration file (missing proxy_string, selector_proxy_links, urltest_proxy_links, outbound_json, or interface). Aborted." "error"
+        log "Outbound section not found. Please check your configuration file (missing proxy_string, selector_proxy_links, urltest_proxy_links, failover_proxy_links, outbound_json, or interface). Aborted." "error"
         exit 1
     fi
 }
 
 _check_outbound_section() {
     local section="$1"
-    local proxy_string interface outbound_json urltest_proxy_links
+    local proxy_string interface outbound_json urltest_proxy_links failover_proxy_links
 
     config_get proxy_string "$section" "proxy_string"
     config_get selector_proxy_links "$section" "selector_proxy_links"
     config_get urltest_proxy_links "$section" "urltest_proxy_links"
+    config_get failover_proxy_links "$section" "failover_proxy_links"
     config_get outbound_json "$section" "outbound_json"
     config_get interface "$section" "interface"
 
     if [ -n "$proxy_string" ] || [ -n "$selector_proxy_links" ] || [ -n "$urltest_proxy_links" ] ||
-        [ -n "$outbound_json" ] || [ -n "$interface" ]; then
+        [ -n "$failover_proxy_links" ] || [ -n "$outbound_json" ] || [ -n "$interface" ]; then
         section_exists=0
     fi
 }
@@ -711,6 +712,44 @@ configure_outbound_handler() {
             config="$(sing_box_cm_add_urltest_outbound "$config" "$urltest_tag" "$urltest_outbounds" \
                 "$urltest_testing_url" "$urltest_check_interval" "$urltest_tolerance")"
             config="$(sing_box_cm_add_selector_outbound "$config" "$selector_tag" "$selector_outbounds" "$urltest_tag")"
+            ;;
+        failover)
+            log "Detected proxy configuration type: failover" "debug"
+            local failover_proxy_links udp_over_tcp i failover_tag selector_tag outbound_tag outbound_tags \
+                failover_outbounds selector_outbounds failover_check_interval failover_testing_url \
+                failover_idle_timeout failover_recovery_threshold
+            config_get failover_proxy_links "$section" "failover_proxy_links"
+            config_get udp_over_tcp "$section" "enable_udp_over_tcp"
+            config_get failover_check_interval "$section" "failover_check_interval" "3m"
+            config_get failover_testing_url "$section" "failover_testing_url" "https://www.gstatic.com/generate_204"
+            config_get failover_idle_timeout "$section" "failover_idle_timeout" "30m"
+            config_get failover_recovery_threshold "$section" "failover_recovery_threshold" 3
+
+            if [ -z "$failover_proxy_links" ]; then
+                log "Failover proxy links is not set. Aborted." "fatal"
+                exit 1
+            fi
+
+            i=1
+            for link in $failover_proxy_links; do
+                config="$(sing_box_cf_add_proxy_outbound "$config" "$section-$i" "$link" "$udp_over_tcp")"
+                outbound_tag="$(get_outbound_tag_by_section "$section-$i")"
+                if [ -z "$outbound_tags" ]; then
+                    outbound_tags="$outbound_tag"
+                else
+                    outbound_tags="$outbound_tags,$outbound_tag"
+                fi
+                i=$((i + 1))
+            done
+
+            failover_tag="$(get_outbound_tag_by_section "$section-failover")"
+            selector_tag="$(get_outbound_tag_by_section "$section")"
+            failover_outbounds="$(comma_string_to_json_array "$outbound_tags")"
+            selector_outbounds="$(comma_string_to_json_array "$outbound_tags,$failover_tag")"
+            config="$(sing_box_cm_add_failover_outbound "$config" "$failover_tag" "$failover_outbounds" \
+                "$failover_testing_url" "$failover_check_interval" "$failover_idle_timeout" \
+                "$failover_recovery_threshold")"
+            config="$(sing_box_cm_add_selector_outbound "$config" "$selector_tag" "$selector_outbounds" "$failover_tag")"
             ;;
         *)
             log "Unknown proxy configuration type: '$proxy_config_type'. Aborted." "fatal"

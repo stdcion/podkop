@@ -107,6 +107,12 @@ export namespace Podkop {
     proxy_string: string;
   }
 
+  export interface ConfigProxyFailoverSection {
+    connection_type: 'proxy';
+    proxy_config_type: 'failover';
+    failover_proxy_links: string[];
+  }
+
   export interface ConfigProxyOutboundSection {
     connection_type: 'proxy';
     proxy_config_type: 'outbound';
@@ -125,6 +131,7 @@ export namespace Podkop {
   export type ConfigBaseSection =
     | ConfigProxyUrlTestSection
     | ConfigProxySelectorSection
+    | ConfigProxyFailoverSection
     | ConfigProxyUrlSection
     | ConfigProxyOutboundSection
     | ConfigVpnSection

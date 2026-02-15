@@ -988,6 +988,54 @@ sing_box_cm_add_urltest_outbound() {
 }
 
 #######################################
+# Add a Failover outbound to the outbounds section of a sing-box JSON configuration.
+# Arguments:
+#   config: string (JSON), sing-box configuration to modify
+#   tag: string, identifier for the Failover outbound
+#   outbounds: string, JSON array of outbound tags to failover between
+#   url: string, URL to probe (optional)
+#   interval: string, test interval (e.g., "3m") (optional)
+#   idle_timeout: string, idle timeout duration (e.g., "30m") (optional)
+#   recovery_threshold: string or integer, number of successful checks before recovery (optional)
+#   interrupt_exist_connections: boolean, flag to interrupt existing connections ("true"/"false") (optional)
+# Outputs:
+#   Writes updated JSON configuration to stdout
+# Example:
+#   CONFIG=$(sing_box_cm_add_failover_outbound "$CONFIG" "failover-proxy" '["proxy1","proxy2"]')
+#######################################
+sing_box_cm_add_failover_outbound() {
+    local config="$1"
+    local tag="$2"
+    local outbounds="$3"
+    local url="$4"
+    local interval="$5"
+    local idle_timeout="$6"
+    local recovery_threshold="$7"
+    local interrupt_exist_connections="$8"
+
+    echo "$config" | jq \
+        --arg tag "$tag" \
+        --argjson outbounds "$outbounds" \
+        --arg url "$url" \
+        --arg interval "$interval" \
+        --arg idle_timeout "$idle_timeout" \
+        --arg recovery_threshold "$recovery_threshold" \
+        --arg interrupt_exist_connections "$interrupt_exist_connections" \
+        '.outbounds += [
+            {
+                type: "failover",
+                tag: $tag,
+                outbounds: $outbounds
+            }
+            + (if $url != "" then {url: $url} else {} end)
+            + (if $interval != "" then {interval: $interval} else {} end)
+            + (if $idle_timeout != "" then {idle_timeout: $idle_timeout} else {} end)
+            + (if $recovery_threshold != "" then {recovery_threshold: ($recovery_threshold | tonumber)} else {} end)
+            + (if $interrupt_exist_connections == "true" then {interrupt_exist_connections: true} else {} end)
+        ]'
+}
+
+#######################################
 # Add a Selector outbound to the outbounds section of a sing-box JSON configuration.
 # Arguments:
 #   config: string (JSON), sing-box configuration to modify
