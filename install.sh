@@ -174,6 +174,8 @@ main() {
         fi
     done
 
+    replace_sing_box
+
     ru=""
     for f in "$DOWNLOAD_DIR"/luci-i18n-podkop-ru*; do
         if [ -f "$f" ]; then
@@ -305,6 +307,66 @@ sing_box() {
         service podkop stop
         pkg_remove sing-box
     fi
+}
+
+replace_sing_box() {
+    local arch
+    arch=$(uname -m)
+
+    case "$arch" in
+        aarch64)
+            local archive_name="sing-box-linux-arm64.tar.gz"
+            ;;
+        *)
+            msg "Warning: Custom sing-box binary is only available for aarch64. Current architecture: $arch. Skipping replacement."
+            return
+            ;;
+    esac
+
+    msg "Replacing sing-box with custom build (failover support)..."
+
+    /etc/init.d/sing-box stop 2>/dev/null
+
+    local url="https://github.com/stdcion/sing-box/releases/download/latest/$archive_name"
+    local archive_path="$DOWNLOAD_DIR/$archive_name"
+
+    attempt=0
+    while [ $attempt -lt $COUNT ]; do
+        msg "Downloading custom sing-box (attempt $((attempt+1)))..."
+        if wget -q -O "$archive_path" "$url" && [ -s "$archive_path" ]; then
+            msg "Custom sing-box downloaded successfully"
+            break
+        fi
+        msg "Download error. Retrying..."
+        rm -f "$archive_path"
+        attempt=$((attempt+1))
+    done
+
+    if [ $attempt -eq $COUNT ]; then
+        msg "Failed to download custom sing-box after $COUNT attempts. Skipping replacement."
+        return
+    fi
+
+    tar -xzf "$archive_path" -C "$DOWNLOAD_DIR"
+
+    local sing_box_path
+    sing_box_path=$(which sing-box)
+
+    if [ -z "$sing_box_path" ]; then
+        msg "Warning: sing-box binary not found. Skipping replacement."
+        return
+    fi
+
+    cp "$DOWNLOAD_DIR/sing-box" "$sing_box_path"
+    chmod 755 "$sing_box_path"
+
+    if sing-box version >/dev/null 2>&1; then
+        msg "Custom sing-box installed successfully: $(sing-box version | head -n 1)"
+    else
+        msg "Warning: Custom sing-box binary verification failed."
+    fi
+
+    rm -f "$archive_path" "$DOWNLOAD_DIR/sing-box"
 }
 
 main
