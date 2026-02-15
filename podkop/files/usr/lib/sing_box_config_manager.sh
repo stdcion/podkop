@@ -1031,6 +1031,7 @@ sing_box_cm_add_urltest_outbound() {
 #   interval: string, test interval (e.g., "3m") (optional)
 #   idle_timeout: string, idle timeout duration (e.g., "30m") (optional)
 #   recovery_threshold: string or integer, number of successful checks before recovery (optional)
+#   failure_threshold: string or integer, number of failed checks before marking outbound unavailable (optional)
 #   interrupt_exist_connections: boolean, flag to interrupt existing connections ("true"/"false") (optional)
 # Outputs:
 #   Writes updated JSON configuration to stdout
@@ -1045,7 +1046,8 @@ sing_box_cm_add_failover_outbound() {
     local interval="$5"
     local idle_timeout="$6"
     local recovery_threshold="$7"
-    local interrupt_exist_connections="$8"
+    local failure_threshold="$8"
+    local interrupt_exist_connections="$9"
 
     echo "$config" | jq \
         --arg tag "$tag" \
@@ -1054,6 +1056,7 @@ sing_box_cm_add_failover_outbound() {
         --arg interval "$interval" \
         --arg idle_timeout "$idle_timeout" \
         --arg recovery_threshold "$recovery_threshold" \
+        --arg failure_threshold "$failure_threshold" \
         --arg interrupt_exist_connections "$interrupt_exist_connections" \
         '.outbounds += [
             {
@@ -1065,6 +1068,7 @@ sing_box_cm_add_failover_outbound() {
             + (if $interval != "" then {interval: $interval} else {} end)
             + (if $idle_timeout != "" then {idle_timeout: $idle_timeout} else {} end)
             + (if $recovery_threshold != "" then {recovery_threshold: ($recovery_threshold | tonumber)} else {} end)
+            + (if $failure_threshold != "" then {failure_threshold: ($failure_threshold | tonumber)} else {} end)
             + (if $interrupt_exist_connections == "true" then {interrupt_exist_connections: true} else {} end)
         ]'
 }

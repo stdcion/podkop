@@ -292,6 +292,29 @@ function createSectionContent(section) {
   };
 
   o = section.option(
+    form.Value,
+    "failover_failure_threshold",
+    _("Failover Failure Threshold"),
+    _("Number of failed health checks before marking an outbound as unavailable")
+  );
+  o.default = "1";
+  o.rmempty = false;
+  o.depends("proxy_config_type", "failover");
+  o.validate = function (section_id, value) {
+    if (!value || value.length === 0) {
+      return true;
+    }
+
+    const parsed = parseFloat(value);
+
+    if (/^[0-9]+$/.test(value) && !isNaN(parsed) && isFinite(parsed) && parsed >= 1 && parsed <= 10) {
+      return true;
+    }
+
+    return _('Must be a number in the range of 1 - 10');
+  };
+
+  o = section.option(
     form.Flag,
     "failover_interrupt_exist_connections",
     _("Interrupt Existing Connections"),

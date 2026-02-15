@@ -724,13 +724,14 @@ configure_outbound_handler() {
             log "Detected proxy configuration type: failover" "debug"
             local failover_proxy_links udp_over_tcp i failover_tag selector_tag outbound_tag outbound_tags \
                 failover_outbounds selector_outbounds failover_check_interval failover_testing_url \
-                failover_idle_timeout failover_recovery_threshold failover_interrupt_exist_connections
+                failover_idle_timeout failover_recovery_threshold failover_failure_threshold failover_interrupt_exist_connections
             config_get failover_proxy_links "$section" "failover_proxy_links"
             config_get udp_over_tcp "$section" "enable_udp_over_tcp"
             config_get failover_check_interval "$section" "failover_check_interval" "3m"
             config_get failover_testing_url "$section" "failover_testing_url" "https://www.gstatic.com/generate_204"
             config_get failover_idle_timeout "$section" "failover_idle_timeout" "30m"
             config_get failover_recovery_threshold "$section" "failover_recovery_threshold" 3
+            config_get failover_failure_threshold "$section" "failover_failure_threshold" 1
             config_get_bool failover_interrupt_exist_connections "$section" "failover_interrupt_exist_connections" 1
 
             if [ -z "$failover_proxy_links" ]; then
@@ -760,7 +761,7 @@ configure_outbound_handler() {
             selector_outbounds="$(comma_string_to_json_array "$outbound_tags,$failover_tag")"
             config="$(sing_box_cm_add_failover_outbound "$config" "$failover_tag" "$failover_outbounds" \
                 "$failover_testing_url" "$failover_check_interval" "$failover_idle_timeout" \
-                "$failover_recovery_threshold" \
+                "$failover_recovery_threshold" "$failover_failure_threshold" \
                 "$([ "$failover_interrupt_exist_connections" -eq 1 ] && echo "true" || echo "")")"
             config="$(sing_box_cm_add_selector_outbound "$config" "$selector_tag" "$selector_outbounds" "$failover_tag")"
             ;;
