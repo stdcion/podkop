@@ -3980,11 +3980,28 @@ async function runSectionsCheck() {
           const isDirect = selectedOutbound?.type === "direct";
           const success3 = latencyGroup.success && !latencyGroup.data.message;
           if (success3) {
-            if (isUrlTest || isFailover) {
-              const latency2 = Object.values(latencyGroup.data).map((item) => item ? `${item}ms` : "n/a").join(" / ");
+            if (isUrlTest) {
+              const latency2 = Object.values(latencyGroup.data).map((item) => item != null ? `${item}ms` : "n/a").join(" / ");
               return {
                 success: true,
-                latency: `[${isUrlTest ? _("Fastest") : _("Active")}] ${latency2}`
+                latency: `[${_("Fastest")}] ${latency2}`
+              };
+            }
+            if (isFailover) {
+              const failoverLatency = await PodkopShellMethods.getClashApiGroupLatency(
+                selectedOutbound?.code ?? ""
+              );
+              const failoverSuccess = failoverLatency.success && !failoverLatency.data.message;
+              if (failoverSuccess) {
+                const latency2 = Object.values(failoverLatency.data).map((item) => item != null ? `${item}ms` : "n/a").join(" / ");
+                return {
+                  success: true,
+                  latency: `[${_("Active")}] ${latency2}`
+                };
+              }
+              return {
+                success: false,
+                latency: `[${_("Active")}] ${_("Not responding")}`
               };
             }
             if (isDirect) {
