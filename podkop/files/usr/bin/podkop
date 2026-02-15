@@ -1867,7 +1867,7 @@ get_system_info() {
 
     podkop_version="$PODKOP_VERSION"
 
-    podkop_latest_version=$(curl -m 3 -s https://api.github.com/repos/itdoginfo/podkop/releases/latest | grep '"tag_name":' | cut -d'"' -f4)
+    podkop_latest_version=$(curl -m 3 -s https://api.github.com/repos/stdcion/podkop/releases/latest | grep '"tag_name":' | cut -d'"' -f4)
     [ -z "$podkop_latest_version" ] && podkop_latest_version="unknown"
 
     if [ -f /www/luci-static/resources/view/podkop/main.js ]; then
