@@ -2211,7 +2211,8 @@ check_sing_box() {
             local patch
             major=$(echo "$version" | cut -d. -f1)
             minor=$(echo "$version" | cut -d. -f2)
-            patch=$(echo "$version" | cut -d. -f3)
+            patch=$(echo "$version" | cut -d. -f3 | sed 's/[^0-9].*//')
+            patch=${patch:-0}
 
             # Compare version: must be >= 1.12.4
             if [ "$major" -gt 1 ] ||

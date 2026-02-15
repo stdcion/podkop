@@ -3976,13 +3976,14 @@ async function runSectionsCheck() {
             (item) => item.selected
           );
           const isUrlTest = selectedOutbound?.type === "URLTest";
+          const isFailover = selectedOutbound?.type === "Failover";
           const success3 = latencyGroup.success && !latencyGroup.data.message;
           if (success3) {
-            if (isUrlTest) {
+            if (isUrlTest || isFailover) {
               const latency2 = Object.values(latencyGroup.data).map((item) => item ? `${item}ms` : "n/a").join(" / ");
               return {
                 success: true,
-                latency: `[${_("Fastest")}] ${latency2}`
+                latency: `[${isUrlTest ? _("Fastest") : _("Active")}] ${latency2}`
               };
             }
             const selectedProxyDelay = latencyGroup.data?.[selectedOutbound?.code ?? ""];
