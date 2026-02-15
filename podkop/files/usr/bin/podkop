@@ -46,8 +46,7 @@ check_requirements() {
         exit 1
     else
         if ! is_min_package_version "$sing_box_version" "$SB_REQUIRED_VERSION"; then
-            log "Package 'sing-box' version ($sing_box_version) is lower than the required minimum ($SB_REQUIRED_VERSION). Update sing-box: opkg update && opkg remove sing-box && opkg install sing-box. Aborted." "error"
-            exit 1
+            log "Package 'sing-box' version ($sing_box_version) is lower than the required minimum ($SB_REQUIRED_VERSION). Update sing-box: opkg update && opkg remove sing-box && opkg install sing-box." "warn"
         fi
 
         if ! service_exists "sing-box"; then
