@@ -45,18 +45,19 @@ export async function runSectionsCheck() {
           );
 
           const isUrlTest = selectedOutbound?.type === 'URLTest';
+          const isFailover = selectedOutbound?.type === 'Failover';
 
           const success = latencyGroup.success && !latencyGroup.data.message;
 
           if (success) {
-            if (isUrlTest) {
+            if (isUrlTest || isFailover) {
               const latency = Object.values(latencyGroup.data)
                 .map((item) => (item ? `${item}ms` : 'n/a'))
                 .join(' / ');
 
               return {
                 success: true,
-                latency: `[${_('Fastest')}] ${latency}`,
+                latency: `[${isUrlTest ? _('Fastest') : _('Active')}] ${latency}`,
               };
             }
 
