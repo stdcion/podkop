@@ -1045,7 +1045,8 @@ var DNS_SERVER_OPTIONS = {
   "common.dot.dns.yandex.net": "common.dot.dns.yandex.net (Yandex)",
   "dns.adguard-dns.com": "dns.adguard-dns.com (AdGuard Default)",
   "unfiltered.adguard-dns.com": "unfiltered.adguard-dns.com (AdGuard Unfiltered)",
-  "family.adguard-dns.com": "family.adguard-dns.com (AdGuard Family)"
+  "family.adguard-dns.com": "family.adguard-dns.com (AdGuard Family)",
+  "127.0.0.10:5454": "127.0.0.10:5454 (dnsmasq-ru)"
 };
 var BOOTSTRAP_DNS_SERVER_OPTIONS = {
   "77.88.8.8": "77.88.8.8 (Yandex DNS)",
@@ -1055,7 +1056,8 @@ var BOOTSTRAP_DNS_SERVER_OPTIONS = {
   "8.8.8.8": "8.8.8.8 (Google DNS)",
   "8.8.4.4": "8.8.4.4 (Google DNS)",
   "9.9.9.9": "9.9.9.9 (Quad9 DNS)",
-  "9.9.9.11": "9.9.9.11 (Quad9 DNS)"
+  "9.9.9.11": "9.9.9.11 (Quad9 DNS)",
+  "127.0.0.10:5454": "127.0.0.10:5454 (dnsmasq-ru)"
 };
 var DIAGNOSTICS_UPDATE_INTERVAL = 1e4;
 var CACHE_TIMEOUT = DIAGNOSTICS_UPDATE_INTERVAL - 1e3;
