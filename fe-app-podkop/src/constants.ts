@@ -27,6 +27,7 @@ export const ALLOWED_WITH_RUSSIA_INSIDE = [
   'ovh',
   'hodca',
   'roblox',
+  'twitch',
   'digitalocean',
   'cloudfront',
 ];
@@ -52,6 +53,7 @@ export const DOMAIN_LIST_OPTIONS = {
   google_play: 'Google Play',
   hodca: 'H.O.D.C.A',
   roblox: 'Roblox',
+  twitch: 'Twitch',
   hetzner: 'Hetzner ASN',
   ovh: 'OVH ASN',
   digitalocean: 'Digital Ocean ASN',
