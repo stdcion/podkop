@@ -326,6 +326,16 @@ function createSectionContent(section) {
 
   o = section.option(
     form.Flag,
+    "failover_last_resort",
+    _("Last Resort"),
+    _("Use the last outbound even when all outbounds are unavailable"),
+  );
+  o.default = "0";
+  o.rmempty = false;
+  o.depends("proxy_config_type", "failover");
+
+  o = section.option(
+    form.Flag,
     "enable_udp_over_tcp",
     _("UDP over TCP"),
     _("Applicable for SOCKS and Shadowsocks proxy"),
