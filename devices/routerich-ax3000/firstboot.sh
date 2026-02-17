@@ -28,6 +28,8 @@ DEFAULT_WIFI_SSID="Routerich"
 DEFAULT_WIFI_KEY="12345678"
 DEFAULT_SPLIT_WIFI="y"
 DEFAULT_ISP_DNS=""
+DEFAULT_DAILY_REBOOT="y"
+DEFAULT_REBOOT_TIME="4:20"
 
 # Initialize variables
 HOSTNAME="${DEFAULT_HOSTNAME}"
@@ -37,6 +39,8 @@ WIFI_SSID="${DEFAULT_WIFI_SSID}"
 WIFI_KEY="${DEFAULT_WIFI_KEY}"
 SPLIT_WIFI="${DEFAULT_SPLIT_WIFI}"
 ISP_DNS="${DEFAULT_ISP_DNS}"
+DAILY_REBOOT="${DEFAULT_DAILY_REBOOT}"
+REBOOT_TIME="${DEFAULT_REBOOT_TIME}"
 
 # Logging
 LOG_FILE="/tmp/router_config.log"
@@ -248,6 +252,31 @@ disable_ipv6() {
     log "IPv6 disabled"
 }
 
+config_daily_reboot() {
+    if [ "$DAILY_REBOOT" != "y" ]; then
+        log "Daily reboot skipped"
+        return
+    fi
+
+    local hour minute
+    hour=$(echo "$REBOOT_TIME" | cut -d: -f1)
+    minute=$(echo "$REBOOT_TIME" | cut -d: -f2)
+
+    log "Setting daily reboot at ${REBOOT_TIME}..."
+
+    # Remove existing reboot cron entries if any
+    crontab -l 2>/dev/null | grep -v '/sbin/reboot' | crontab -
+
+    # Add new reboot cron entry
+    (crontab -l 2>/dev/null; echo "${minute} ${hour} * * * /sbin/reboot") | crontab -
+
+    # Ensure cron is enabled and running
+    /etc/init.d/cron enable
+    /etc/init.d/cron start
+
+    log "Daily reboot configured at ${REBOOT_TIME}"
+}
+
 install_toggle_script() {
     log "Downloading toggle_podkop..."
     wget -O "$TOGGLE_SCRIPT_PATH" "$TOGGLE_SCRIPT_URL" || {
@@ -286,6 +315,18 @@ get_user_input() {
         [nN]*) SPLIT_WIFI="n" ;;
     esac
 
+    printf "Enable daily reboot? [Y/n]: "
+    read -r input
+    case "$input" in
+        [nN]*) DAILY_REBOOT="n" ;;
+    esac
+
+    if [ "$DAILY_REBOOT" = "y" ]; then
+        printf "Daily reboot time (HH:MM, 24h) [%s]: " "${REBOOT_TIME}"
+        read -r input
+        [ -n "$input" ] && REBOOT_TIME="$input"
+    fi
+
     printf "Enter ISP DNS server IP (e.g. 192.168.100.1) or leave empty to skip: "
     read -r input
     if [ -n "$input" ]; then
@@ -309,6 +350,7 @@ main() {
     config_button
     config_dnsmasq_ru
     disable_ipv6
+    config_daily_reboot
 
     log "Configuration completed!"
     echo "Changes logged to $LOG_FILE"
