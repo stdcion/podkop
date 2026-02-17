@@ -1,5 +1,21 @@
 #!/bin/sh
 
+echo "=========================================="
+echo "  Routerich firstboot configuration"
+echo "=========================================="
+echo ""
+echo "Tip: this script will ask for your ISP DNS server IP."
+echo "To find it, run this command before starting:"
+echo ""
+echo "  ifstatus wan | jsonfilter -e '@[\"dns-server\"][*]'"
+echo ""
+printf "Continue? [Y/n]: "
+read -r ans
+case "$ans" in
+    [nN]*) echo "Exiting. Run the commands above to find your ISP DNS, then re-run this script."; exit 0 ;;
+esac
+echo ""
+
 GITHUB_RAW_URL="https://raw.githubusercontent.com/stdcion/podkop/main/devices/routerich-ax3000"
 TOGGLE_SCRIPT_URL="${GITHUB_RAW_URL}/toggle_podkop"
 TOGGLE_SCRIPT_PATH="/usr/bin/toggle_podkop"
@@ -11,6 +27,7 @@ DEFAULT_ROOT_PASS="toor"
 DEFAULT_WIFI_SSID="Routerich"
 DEFAULT_WIFI_KEY="12345678"
 DEFAULT_SPLIT_WIFI="y"
+DEFAULT_ISP_DNS=""
 
 # Initialize variables
 HOSTNAME="${DEFAULT_HOSTNAME}"
@@ -19,6 +36,7 @@ ROOT_PASS="${DEFAULT_ROOT_PASS}"
 WIFI_SSID="${DEFAULT_WIFI_SSID}"
 WIFI_KEY="${DEFAULT_WIFI_KEY}"
 SPLIT_WIFI="${DEFAULT_SPLIT_WIFI}"
+ISP_DNS="${DEFAULT_ISP_DNS}"
 
 # Logging
 LOG_FILE="/tmp/router_config.log"
@@ -168,6 +186,68 @@ EOF
     uci commit system
 }
 
+config_dnsmasq_ru() {
+    log "Configuring dnsmasq-ru..."
+
+    cat > /etc/dnsmasq-ru.conf << EOF
+port=5454
+listen-address=127.0.0.10
+bind-interfaces
+interface=lo
+no-resolv
+no-hosts
+no-dhcp-interface=*
+all-servers
+server=77.88.8.8
+server=77.88.8.1
+$([ -n "$ISP_DNS" ] && echo "server=$ISP_DNS")
+cache-size=1000
+no-negcache
+domain-needed
+bogus-priv
+EOF
+
+    cat > /etc/init.d/dnsmasq-ru << 'INITEOF'
+#!/bin/sh /etc/rc.common
+
+START=96
+USE_PROCD=1
+
+start_service() {
+    procd_open_instance
+    procd_set_param command /usr/sbin/dnsmasq -C /etc/dnsmasq-ru.conf -k
+    procd_set_param respawn
+    procd_set_param pidfile /var/run/dnsmasq-ru.pid
+    procd_close_instance
+}
+INITEOF
+
+    chmod +x /etc/init.d/dnsmasq-ru
+    /etc/init.d/dnsmasq-ru enable
+    /etc/init.d/dnsmasq-ru start
+
+    log "dnsmasq-ru configured on 127.0.0.10:5454"
+}
+
+disable_ipv6() {
+    log "Disabling IPv6..."
+
+    uci set network.lan.ipv6='0'
+    uci set network.wan.ipv6='0'
+    uci set network.lan.delegate='0'
+    uci -q delete dhcp.lan.dhcpv6
+    uci -q delete dhcp.lan.ra
+    uci -q delete network.globals.ula_prefix
+    uci commit
+
+    /etc/init.d/odhcpd stop
+    /etc/init.d/odhcpd disable
+
+    /etc/init.d/network restart
+
+    log "IPv6 disabled"
+}
+
 install_toggle_script() {
     log "Downloading toggle_podkop..."
     wget -O "$TOGGLE_SCRIPT_PATH" "$TOGGLE_SCRIPT_URL" || {
@@ -205,6 +285,13 @@ get_user_input() {
     case "$input" in
         [nN]*) SPLIT_WIFI="n" ;;
     esac
+
+    printf "Enter ISP DNS server IP (e.g. 192.168.100.1) or leave empty to skip: "
+    read -r input
+    if [ -n "$input" ]; then
+        validate_ip "$input"
+        ISP_DNS="$input"
+    fi
 }
 
 main() {
@@ -220,6 +307,8 @@ main() {
     config_router_ip
     config_https_access
     config_button
+    config_dnsmasq_ru
+    disable_ipv6
 
     log "Configuration completed!"
     echo "Changes logged to $LOG_FILE"

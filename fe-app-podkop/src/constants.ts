@@ -76,6 +76,7 @@ export const DNS_SERVER_OPTIONS = {
   'unfiltered.adguard-dns.com':
     'unfiltered.adguard-dns.com (AdGuard Unfiltered)',
   'family.adguard-dns.com': 'family.adguard-dns.com (AdGuard Family)',
+  '127.0.0.10:5454': '127.0.0.10:5454 (dnsmasq-ru)',
 };
 export const BOOTSTRAP_DNS_SERVER_OPTIONS = {
   '77.88.8.8': '77.88.8.8 (Yandex DNS)',
@@ -86,6 +87,7 @@ export const BOOTSTRAP_DNS_SERVER_OPTIONS = {
   '8.8.4.4': '8.8.4.4 (Google DNS)',
   '9.9.9.9': '9.9.9.9 (Quad9 DNS)',
   '9.9.9.11': '9.9.9.11 (Quad9 DNS)',
+  '127.0.0.10:5454': '127.0.0.10:5454 (dnsmasq-ru)',
 };
 
 export const DIAGNOSTICS_UPDATE_INTERVAL = 10000; // 10 seconds
