@@ -2045,24 +2045,37 @@ check_dns_available() {
         display_dns_server="dns.nextdns.io/$masked_path"
     fi
 
+    # Parse host:port for dig (dig uses -p for port, not host:port syntax)
+    local dns_host dns_port
+    if echo "$dns_server" | grep -q ":"; then
+        dns_host="$(echo "$dns_server" | cut -d':' -f1)"
+        dns_port="$(echo "$dns_server" | cut -d':' -f2)"
+    else
+        dns_host="$dns_server"
+        dns_port=""
+    fi
+
+    local dig_port_flag=""
+    [ -n "$dns_port" ] && dig_port_flag="-p $dns_port"
+
     if [ "$dns_type" = "doh" ]; then
         # Check if dns_server already contains a path
         local doh_path="/dns-query"
-        if echo "$dns_server" | grep -q "/"; then
+        if echo "$dns_host" | grep -q "/"; then
             # Path is already present, extract it
-            doh_path="/$(echo "$dns_server" | cut -d'/' -f2-)"
-            dns_server="$(echo "$dns_server" | cut -d'/' -f1)"
+            doh_path="/$(echo "$dns_host" | cut -d'/' -f2-)"
+            dns_host="$(echo "$dns_host" | cut -d'/' -f1)"
         fi
 
-        if dig @"$dns_server" "$domain" +https="$doh_path" +timeout=2 +tries=1 > /dev/null 2>&1; then
+        if dig @"$dns_host" $dig_port_flag "$domain" +https="$doh_path" +timeout=2 +tries=1 > /dev/null 2>&1; then
             dns_status=1
         fi
     elif [ "$dns_type" = "dot" ]; then
-        if dig @"$dns_server" "$domain" +tls +timeout=2 +tries=1 > /dev/null 2>&1; then
+        if dig @"$dns_host" $dig_port_flag "$domain" +tls +timeout=2 +tries=1 > /dev/null 2>&1; then
             dns_status=1
         fi
     elif [ "$dns_type" = "udp" ]; then
-        if dig @"$dns_server" "$domain" +timeout=2 +tries=1 > /dev/null 2>&1; then
+        if dig @"$dns_host" $dig_port_flag "$domain" +timeout=2 +tries=1 > /dev/null 2>&1; then
             dns_status=1
         fi
     fi
@@ -2074,7 +2087,18 @@ check_dns_available() {
 
     # Check bootstrap DNS server
     if [ -n "$bootstrap_dns_server" ]; then
-        if dig @"$bootstrap_dns_server" "$domain" +timeout=2 +tries=1 > /dev/null 2>&1; then
+        local bootstrap_host bootstrap_port bootstrap_port_flag
+        if echo "$bootstrap_dns_server" | grep -q ":"; then
+            bootstrap_host="$(echo "$bootstrap_dns_server" | cut -d':' -f1)"
+            bootstrap_port="$(echo "$bootstrap_dns_server" | cut -d':' -f2)"
+        else
+            bootstrap_host="$bootstrap_dns_server"
+            bootstrap_port=""
+        fi
+        bootstrap_port_flag=""
+        [ -n "$bootstrap_port" ] && bootstrap_port_flag="-p $bootstrap_port"
+
+        if dig @"$bootstrap_host" $bootstrap_port_flag "$domain" +timeout=2 +tries=1 > /dev/null 2>&1; then
             bootstrap_dns_status=1
         fi
     fi
