@@ -1033,6 +1033,7 @@ sing_box_cm_add_urltest_outbound() {
 #   recovery_threshold: string or integer, number of successful checks before recovery (optional)
 #   failure_threshold: string or integer, number of failed checks before marking outbound unavailable (optional)
 #   interrupt_exist_connections: boolean, flag to interrupt existing connections ("true"/"false") (optional)
+#   last_resort: boolean, use last outbound even when all are unavailable ("true"/"false") (optional)
 # Outputs:
 #   Writes updated JSON configuration to stdout
 # Example:
@@ -1048,6 +1049,7 @@ sing_box_cm_add_failover_outbound() {
     local recovery_threshold="$7"
     local failure_threshold="$8"
     local interrupt_exist_connections="$9"
+    local last_resort="${10}"
 
     echo "$config" | jq \
         --arg tag "$tag" \
@@ -1058,6 +1060,7 @@ sing_box_cm_add_failover_outbound() {
         --arg recovery_threshold "$recovery_threshold" \
         --arg failure_threshold "$failure_threshold" \
         --arg interrupt_exist_connections "$interrupt_exist_connections" \
+        --arg last_resort "$last_resort" \
         '.outbounds += [
             {
                 type: "failover",
@@ -1070,6 +1073,7 @@ sing_box_cm_add_failover_outbound() {
             + (if $recovery_threshold != "" then {recovery_threshold: ($recovery_threshold | tonumber)} else {} end)
             + (if $failure_threshold != "" then {failure_threshold: ($failure_threshold | tonumber)} else {} end)
             + (if $interrupt_exist_connections == "true" then {interrupt_exist_connections: true} else {} end)
+            + (if $last_resort == "true" then {last_resort: true} else {} end)
         ]'
 }
 
