@@ -340,6 +340,8 @@ main() {
     get_user_input
 
     config_ntp
+    log "Waiting for NTP sync..."
+    sleep 5
     opkg update && opkg install kmod-nft-tproxy kmod-button-hotplug
     install_toggle_script
     config_hostname
