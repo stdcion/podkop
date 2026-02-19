@@ -2312,7 +2312,7 @@ clash_api() {
         clash_api_controller_address="127.0.0.1"
     fi
     CLASH_URL="$clash_api_controller_address:$SB_CLASH_API_CONTROLLER_PORT"
-    TEST_URL="https://www.gstatic.com/generate_204"
+    config_get TEST_URL "settings" "clash_test_url" "https://www.gstatic.com/generate_204"
 
     local enable_yacd_wan_access yacd_secret_key auth_header
     config_get_bool enable_yacd_wan_access "settings" "enable_yacd_wan_access" 0
