@@ -2103,10 +2103,14 @@ check_dns_available() {
         fi
     fi
 
-    # Check if /etc/config/dhcp has server 127.0.0.42
-    config_load dhcp
-    config_foreach check_dhcp_has_podkop_dns dnsmasq
-    config_load "$PODKOP_CONFIG"
+    # Check if /etc/config/dhcp has server 127.0.0.42 (skip if dont_touch_dhcp)
+    local dont_touch_dhcp
+    config_get_bool dont_touch_dhcp "settings" "dont_touch_dhcp" 0
+    if [ "$dont_touch_dhcp" -eq 0 ]; then
+        config_load dhcp
+        config_foreach check_dhcp_has_podkop_dns dnsmasq
+        config_load "$PODKOP_CONFIG"
+    fi
 
     echo "{\"dns_type\":\"$dns_type\",\"dns_server\":\"$display_dns_server\",\"dns_status\":$dns_status,\"dns_on_router\":$dns_on_router,\"bootstrap_dns_server\":\"$bootstrap_dns_server\",\"bootstrap_dns_status\":$bootstrap_dns_status,\"dhcp_config_status\":$dhcp_config_status}" | jq .
 }
