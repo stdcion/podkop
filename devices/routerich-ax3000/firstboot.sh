@@ -257,24 +257,6 @@ config_luci_language() {
     log "LuCI language set to English"
 }
 
-disable_ipv6() {
-    log "Disabling IPv6..."
-
-    uci set network.lan.ipv6='0'
-    uci set network.wan.ipv6='0'
-    uci set network.lan.delegate='0'
-    uci -q delete dhcp.lan.dhcpv6
-    uci -q delete dhcp.lan.ra
-    uci -q delete network.globals.ula_prefix
-    uci commit
-
-    /etc/init.d/odhcpd stop
-    /etc/init.d/odhcpd disable
-
-    /etc/init.d/network restart
-
-    log "IPv6 disabled"
-}
 
 config_daily_reboot() {
     if [ "$DAILY_REBOOT" != "y" ]; then
@@ -381,7 +363,6 @@ main() {
     config_button
     config_dnsmasq
     config_luci_language
-    disable_ipv6
     config_daily_reboot
 
     log "Configuration completed!"
