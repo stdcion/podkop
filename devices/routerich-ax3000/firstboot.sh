@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Wait for wget output to finish when piped via "wget ... | sh"
+sleep 1
+
+echo ""
 echo "=========================================="
 echo "  Routerich firstboot configuration"
 echo "=========================================="
