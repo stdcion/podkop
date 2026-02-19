@@ -298,6 +298,13 @@ install_toggle_script() {
         exit 1
     }
     chmod +x "$TOGGLE_SCRIPT_PATH"
+
+    # Sync LED state with podkop on boot
+    if ! grep -q 'toggle_podkop init' /etc/rc.local 2>/dev/null; then
+        sed -i '/^exit 0$/d' /etc/rc.local 2>/dev/null
+        echo "$TOGGLE_SCRIPT_PATH init" >> /etc/rc.local
+        echo "exit 0" >> /etc/rc.local
+    fi
 }
 
 get_user_input() {

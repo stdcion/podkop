@@ -44,5 +44,12 @@ case "$1" in
         /etc/init.d/podkop disable
         led_off
         ;;
-    *) echo "Usage: $0 {toggle|on|off}" ;;
+    init)
+        if /etc/init.d/podkop enabled; then
+            led_on
+        else
+            led_off
+        fi
+        ;;
+    *) echo "Usage: $0 {toggle|on|off|init}" ;;
 esac
