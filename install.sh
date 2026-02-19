@@ -209,6 +209,29 @@ main() {
         fi
     fi
 
+    # If dns-failsafe-proxy is installed, configure DNS chain:
+    # dnsmasq → dns-failsafe-proxy → podkop (primary) / fallback DNS
+    #
+    # podkop's start() may have already added 127.0.0.42#53 to dnsmasq,
+    # so we fix it up: set dont_touch_dhcp=1, replace dnsmasq server entries,
+    # and restart dnsmasq to apply.
+    if [ -f /etc/config/dns-failsafe-proxy ]; then
+        msg "Configuring dns-failsafe-proxy integration..."
+
+        # Tell podkop not to manage dnsmasq from now on
+        uci set podkop.settings.dont_touch_dhcp='1'
+        uci commit podkop
+
+        # Replace any DNS server entries (including podkop's 127.0.0.42#53)
+        # with dns-failsafe-proxy address
+        uci -q delete dhcp.@dnsmasq[0].server
+        uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5359'
+        uci commit dhcp
+        /etc/init.d/dnsmasq restart
+
+        msg "DNS chain configured: dnsmasq → dns-failsafe-proxy → podkop"
+    fi
+
     find "$DOWNLOAD_DIR" -type f -name '*podkop*' -exec rm {} \;
 }
 

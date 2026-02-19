@@ -24,9 +24,6 @@ TOGGLE_SCRIPT_PATH="/usr/bin/toggle_podkop"
 DEFAULT_HOSTNAME="Routerich"
 DEFAULT_ROUTER_IP="192.168.1.1"
 DEFAULT_ROOT_PASS="toor"
-DEFAULT_WIFI_SSID="Routerich"
-DEFAULT_WIFI_KEY="12345678"
-DEFAULT_SPLIT_WIFI="y"
 DEFAULT_ISP_DNS=""
 DEFAULT_DAILY_REBOOT="y"
 DEFAULT_REBOOT_TIME="4:20"
@@ -35,9 +32,6 @@ DEFAULT_REBOOT_TIME="4:20"
 HOSTNAME="${DEFAULT_HOSTNAME}"
 ROUTER_IP="${DEFAULT_ROUTER_IP}"
 ROOT_PASS="${DEFAULT_ROOT_PASS}"
-WIFI_SSID="${DEFAULT_WIFI_SSID}"
-WIFI_KEY="${DEFAULT_WIFI_KEY}"
-SPLIT_WIFI="${DEFAULT_SPLIT_WIFI}"
 ISP_DNS="${DEFAULT_ISP_DNS}"
 DAILY_REBOOT="${DEFAULT_DAILY_REBOOT}"
 REBOOT_TIME="${DEFAULT_REBOOT_TIME}"
@@ -121,7 +115,7 @@ config_wifi() {
     uci set wireless.radio0.disabled='0'
     uci set wireless.default_radio0.network='lan'
     uci set wireless.default_radio0.encryption='psk2'
-    uci set wireless.default_radio0.key="${WIFI_KEY}"
+    uci set wireless.radio0.noscan='0'
 
     # 5GHz
     uci set wireless.radio1.channel='36'
@@ -132,17 +126,6 @@ config_wifi() {
     uci set wireless.radio1.disabled='0'
     uci set wireless.default_radio1.network='lan'
     uci set wireless.default_radio1.encryption='psk2'
-    uci set wireless.default_radio1.key="${WIFI_KEY}"
-
-    if [ "$SPLIT_WIFI" = "y" ]; then
-        log "Splitting WiFi: ${WIFI_SSID}_2 / ${WIFI_SSID}_5"
-        uci set wireless.default_radio0.ssid="${WIFI_SSID}_2"
-        uci set wireless.default_radio1.ssid="${WIFI_SSID}_5"
-    else
-        log "Single WiFi SSID: ${WIFI_SSID}"
-        uci set wireless.default_radio0.ssid="${WIFI_SSID}"
-        uci set wireless.default_radio1.ssid="${WIFI_SSID}"
-    fi
 
     uci commit wireless
 }
@@ -190,14 +173,13 @@ EOF
     uci commit system
 }
 
-config_dnsmasq_ru() {
+config_dnsmasq() {
     log "Configuring dnsmasq-ru..."
 
     cat > /etc/dnsmasq-ru.conf << EOF
 port=5454
 listen-address=127.0.0.10
 bind-interfaces
-interface=lo
 no-resolv
 no-hosts
 no-dhcp-interface=*
@@ -229,6 +211,31 @@ INITEOF
     chmod +x /etc/init.d/dnsmasq-ru
     /etc/init.d/dnsmasq-ru enable
     /etc/init.d/dnsmasq-ru start
+
+    # Disable conflicting DNS services
+    for svc in stubby stubby-intercept https-dns-proxy; do
+        if [ -x "/etc/init.d/$svc" ]; then
+            log "Stopping and disabling $svc..."
+            "/etc/init.d/$svc" stop 2>/dev/null
+            "/etc/init.d/$svc" disable 2>/dev/null
+        fi
+    done
+
+    # Configure dns-failsafe-proxy: primary = podkop, failback = dnsmasq-ru
+    if [ -f /etc/config/dns-failsafe-proxy ]; then
+        log "Configuring dns-failsafe-proxy..."
+        uci set dns-failsafe-proxy.main.dns_ip='127.0.0.42'
+        uci set dns-failsafe-proxy.main.dns_port='53'
+        uci set dns-failsafe-proxy.main.failback_ip='127.0.0.10'
+        uci set dns-failsafe-proxy.main.failback_port='5454'
+        uci set dns-failsafe-proxy.main.connect_timeout='1000'
+        uci set dns-failsafe-proxy.main.session_timeout='5000'
+        uci commit dns-failsafe-proxy
+        if [ -x /etc/init.d/dns-failsafe-proxy ]; then
+            /etc/init.d/dns-failsafe-proxy restart 2>/dev/null
+        fi
+        log "dns-failsafe-proxy configured: dns=127.0.0.42:53, failback=127.0.0.10:5454"
+    fi
 
     log "dnsmasq-ru configured on 127.0.0.10:5454"
 }
@@ -264,15 +271,22 @@ config_daily_reboot() {
 
     log "Setting daily reboot at ${REBOOT_TIME}..."
 
+    local cron_file="/etc/crontabs/root"
+    local cron_entry="${minute} ${hour} * * * /sbin/reboot"
+
+    # Ensure cron directory and file exist
+    mkdir -p "$(dirname "$cron_file")"
+    touch "$cron_file"
+
     # Remove existing reboot cron entries if any
-    crontab -l 2>/dev/null | grep -v '/sbin/reboot' | crontab -
+    grep -v '/sbin/reboot' "$cron_file" > "${cron_file}.tmp" && mv "${cron_file}.tmp" "$cron_file"
 
     # Add new reboot cron entry
-    (crontab -l 2>/dev/null; echo "${minute} ${hour} * * * /sbin/reboot") | crontab -
+    echo "$cron_entry" >> "$cron_file"
 
     # Ensure cron is enabled and running
     /etc/init.d/cron enable
-    /etc/init.d/cron start
+    /etc/init.d/cron restart
 
     log "Daily reboot configured at ${REBOOT_TIME}"
 }
@@ -350,7 +364,7 @@ main() {
     config_router_ip
     config_https_access
     config_button
-    config_dnsmasq_ru
+    config_dnsmasq
     disable_ipv6
     config_daily_reboot
 
