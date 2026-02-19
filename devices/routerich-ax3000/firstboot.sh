@@ -39,6 +39,7 @@ ROOT_PASS="${DEFAULT_ROOT_PASS}"
 ISP_DNS="${DEFAULT_ISP_DNS}"
 DAILY_REBOOT="${DEFAULT_DAILY_REBOOT}"
 REBOOT_TIME="${DEFAULT_REBOOT_TIME}"
+LUCI_ENGLISH="n"
 
 # Logging
 LOG_FILE="/tmp/router_config.log"
@@ -244,6 +245,18 @@ INITEOF
     log "dnsmasq-ru configured on 127.0.0.10:5454"
 }
 
+config_luci_language() {
+    if [ "$LUCI_ENGLISH" != "y" ]; then
+        log "LuCI language unchanged"
+        return
+    fi
+
+    log "Setting LuCI language to English..."
+    uci set luci.main.lang='en'
+    uci commit luci
+    log "LuCI language set to English"
+}
+
 disable_ipv6() {
     log "Disabling IPv6..."
 
@@ -337,6 +350,12 @@ get_user_input() {
         [ -n "$input" ] && REBOOT_TIME="$input"
     fi
 
+    printf "Set LuCI interface language to English? [y/N]: "
+    read -r input
+    case "$input" in
+        [yY]*) LUCI_ENGLISH="y" ;;
+    esac
+
     printf "Enter ISP DNS server IP (e.g. 192.168.100.1) or leave empty to skip: "
     read -r input
     if [ -n "$input" ]; then
@@ -361,6 +380,7 @@ main() {
     config_https_access
     config_button
     config_dnsmasq
+    config_luci_language
     disable_ipv6
     config_daily_reboot
 
