@@ -260,6 +260,17 @@ function createSettingsContent(section) {
   o.rmempty = false;
 
   o = section.option(
+    form.Value,
+    "clash_test_url",
+    _("Clash API Test URL"),
+    _("URL used for latency testing in the dashboard. Change if the default URL is blocked by your ISP."),
+  );
+  o.depends("enable_yacd", "1");
+  o.default = "https://www.gstatic.com/generate_204";
+  o.placeholder = "https://www.gstatic.com/generate_204";
+  o.rmempty = false;
+
+  o = section.option(
     form.Flag,
     "disable_quic",
     _("Disable QUIC"),
