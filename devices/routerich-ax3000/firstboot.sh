@@ -213,7 +213,7 @@ INITEOF
     /etc/init.d/dnsmasq-ru start
 
     # Disable conflicting DNS services
-    for svc in stubby stubby-intercept https-dns-proxy; do
+    for svc in stubby stubby-intercept https-dns-proxy doh-proxy; do
         if [ -x "/etc/init.d/$svc" ]; then
             log "Stopping and disabling $svc..."
             "/etc/init.d/$svc" stop 2>/dev/null
