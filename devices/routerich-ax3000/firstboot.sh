@@ -314,21 +314,6 @@ get_user_input() {
     read -r input
     [ -n "$input" ] && ROOT_PASS="$input"
 
-    printf "Enter WiFi SSID [%s]: " "${WIFI_SSID}"
-    read -r input
-    [ -n "$input" ] && WIFI_SSID="$input"
-
-    printf "Enter WiFi Key [%s]: " "${WIFI_KEY}"
-    read -r input
-    [ -n "$input" ] && WIFI_KEY="$input"
-    validate_wifi_key "$WIFI_KEY"
-
-    printf "Split WiFi into separate 2.4GHz and 5GHz networks? [Y/n]: "
-    read -r input
-    case "$input" in
-        [nN]*) SPLIT_WIFI="n" ;;
-    esac
-
     printf "Enable daily reboot? [Y/n]: "
     read -r input
     case "$input" in
