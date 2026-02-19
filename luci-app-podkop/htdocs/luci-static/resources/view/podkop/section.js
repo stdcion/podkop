@@ -196,7 +196,7 @@ function createSectionContent(section) {
   o = section.option(
     form.DynamicList,
     "failover_proxy_links",
-    _("Failover Proxy Links"),
+    _("Proxy List"),
     _("vless://, ss://, trojan://, socks4/5://, hy2/hysteria2://, anytls://, direct:// links")
   );
   o.depends("proxy_config_type", "failover");
@@ -216,22 +216,9 @@ function createSectionContent(section) {
   };
 
   o = section.option(
-    form.ListValue,
-    "failover_check_interval",
-    _("Failover Check Interval"),
-    _("The interval between connectivity tests")
-  );
-  o.value("30s", _("Every 30 seconds"));
-  o.value("1m", _("Every 1 minute"));
-  o.value("3m", _("Every 3 minutes"));
-  o.value("5m", _("Every 5 minutes"));
-  o.default = "3m";
-  o.depends("proxy_config_type", "failover");
-
-  o = section.option(
     form.Value,
     "failover_testing_url",
-    _("Failover Testing URL"),
+    _("Testing URL"),
     _("The URL used to test server connectivity")
   );
   o.value("https://www.gstatic.com/generate_204", "https://www.gstatic.com/generate_204 (Google)");
@@ -241,7 +228,6 @@ function createSectionContent(section) {
   o.default = "https://www.gstatic.com/generate_204";
   o.rmempty = false;
   o.depends("proxy_config_type", "failover");
-
   o.validate = function (section_id, value) {
     if (!value || value.length === 0) {
       return true;
@@ -259,7 +245,7 @@ function createSectionContent(section) {
   o = section.option(
     form.ListValue,
     "failover_idle_timeout",
-    _("Failover Idle Timeout"),
+    _("Idle Timeout"),
     _("How long to wait before stopping health checks when idle")
   );
   o.value("10m", _("10 minutes"));
@@ -269,9 +255,22 @@ function createSectionContent(section) {
   o.depends("proxy_config_type", "failover");
 
   o = section.option(
+    form.ListValue,
+    "failover_check_interval",
+    _("Check Interval"),
+    _("The interval between connectivity tests")
+  );
+  o.value("30s", _("Every 30 seconds"));
+  o.value("1m", _("Every 1 minute"));
+  o.value("3m", _("Every 3 minutes"));
+  o.value("5m", _("Every 5 minutes"));
+  o.default = "3m";
+  o.depends("proxy_config_type", "failover");
+
+  o = section.option(
     form.Value,
     "failover_recovery_threshold",
-    _("Failover Recovery Threshold"),
+    _("Recovery Threshold"),
     _("Number of successful health checks before recovering a failed outbound")
   );
   o.default = "3";
@@ -294,7 +293,7 @@ function createSectionContent(section) {
   o = section.option(
     form.Value,
     "failover_failure_threshold",
-    _("Failover Failure Threshold"),
+    _("Failure Threshold"),
     _("Number of failed health checks before marking an outbound as unavailable")
   );
   o.default = "1";
@@ -316,21 +315,21 @@ function createSectionContent(section) {
 
   o = section.option(
     form.Flag,
-    "failover_interrupt_exist_connections",
-    _("Interrupt Existing Connections"),
-    _("Interrupt existing connections when failover switches to another outbound"),
-  );
-  o.default = "1";
-  o.rmempty = false;
-  o.depends("proxy_config_type", "failover");
-
-  o = section.option(
-    form.Flag,
     "failover_last_resort",
     _("Last Resort"),
     _("Use the last outbound even when all outbounds are unavailable"),
   );
   o.default = "0";
+  o.rmempty = false;
+  o.depends("proxy_config_type", "failover");
+
+  o = section.option(
+    form.Flag,
+    "failover_interrupt_exist_connections",
+    _("Interrupt Existing Connections"),
+    _("Interrupt existing connections when failover switches to another outbound"),
+  );
+  o.default = "1";
   o.rmempty = false;
   o.depends("proxy_config_type", "failover");
 
