@@ -75,8 +75,8 @@ config_hostname() {
 }
 
 config_https_access() {
-    log "Setting HTTPS access..."
-    uci set uhttpd.main.redirect_https='1'
+    log "Disabling HTTPS redirect (allows both HTTP and HTTPS)..."
+    uci set uhttpd.main.redirect_https='0'
     uci commit uhttpd
     service uhttpd reload
 }
