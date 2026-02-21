@@ -309,6 +309,11 @@ install_toggle_script() {
     chmod +x "$LED_INIT_PATH"
     /etc/init.d/podkop-led enable
 
+    # Remove default mesh LED entries that conflict with podkop LED control
+    uci -q delete system.led_mesh2 2>/dev/null
+    uci -q delete system.led_mesh5 2>/dev/null
+    uci commit system
+
     # Clean up old rc.local entry if present
     if grep -q 'toggle_podkop init' /etc/rc.local 2>/dev/null; then
         sed -i '/toggle_podkop init/d' /etc/rc.local 2>/dev/null
