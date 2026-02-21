@@ -23,6 +23,8 @@ echo ""
 GITHUB_RAW_URL="https://raw.githubusercontent.com/stdcion/podkop/main/devices/routerich-ax3000"
 TOGGLE_SCRIPT_URL="${GITHUB_RAW_URL}/toggle_podkop"
 TOGGLE_SCRIPT_PATH="/usr/bin/toggle_podkop"
+LED_INIT_URL="${GITHUB_RAW_URL}/podkop-led"
+LED_INIT_PATH="/etc/init.d/podkop-led"
 
 # Configuration defaults
 DEFAULT_HOSTNAME="Routerich"
@@ -298,11 +300,18 @@ install_toggle_script() {
     }
     chmod +x "$TOGGLE_SCRIPT_PATH"
 
-    # Sync LED state with podkop on boot
-    if ! grep -q 'toggle_podkop init' /etc/rc.local 2>/dev/null; then
-        sed -i '/^exit 0$/d' /etc/rc.local 2>/dev/null
-        echo "$TOGGLE_SCRIPT_PATH init" >> /etc/rc.local
-        echo "exit 0" >> /etc/rc.local
+    # Install LED init script to sync LED state on boot (after all services)
+    log "Downloading podkop-led init script..."
+    wget -O "$LED_INIT_PATH" "$LED_INIT_URL" || {
+        log "Failed to download podkop-led"
+        exit 1
+    }
+    chmod +x "$LED_INIT_PATH"
+    /etc/init.d/podkop-led enable
+
+    # Clean up old rc.local entry if present
+    if grep -q 'toggle_podkop init' /etc/rc.local 2>/dev/null; then
+        sed -i '/toggle_podkop init/d' /etc/rc.local 2>/dev/null
     fi
 }
 
