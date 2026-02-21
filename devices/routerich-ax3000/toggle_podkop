@@ -1,6 +1,7 @@
 #!/bin/sh
 
 LED_SYSFS="blue:mesh"
+LED_PATH="/sys/class/leds/${LED_SYSFS}"
 LED_UCI="system.led_podkop"
 
 led_on() {
@@ -9,7 +10,7 @@ led_on() {
     uci set ${LED_UCI}.sysfs="${LED_SYSFS}"
     uci set ${LED_UCI}.trigger='default-on'
     uci commit system
-    /etc/init.d/led restart
+    echo "default-on" > "$LED_PATH/trigger"
 }
 
 led_off() {
@@ -18,13 +19,13 @@ led_off() {
     uci set ${LED_UCI}.sysfs="${LED_SYSFS}"
     uci set ${LED_UCI}.trigger='none'
     uci commit system
-    /etc/init.d/led restart
+    echo "none" > "$LED_PATH/trigger"
 }
 
 led_blink() {
-    echo "timer" > "/sys/class/leds/${LED_SYSFS}/trigger"
-    echo 10 > "/sys/class/leds/${LED_SYSFS}/delay_on"
-    echo 10 > "/sys/class/leds/${LED_SYSFS}/delay_off"
+    echo "timer" > "$LED_PATH/trigger"
+    echo 10 > "$LED_PATH/delay_on"
+    echo 10 > "$LED_PATH/delay_off"
 }
 
 toggle() {
