@@ -314,6 +314,12 @@ install_toggle_script() {
     uci -q delete system.led_mesh5 2>/dev/null
     uci commit system
 
+    # Disable factory button handler (WPS/mesh) to avoid LED conflicts
+    cat > /etc/rc.button/BTN_0 << 'BTNEOF'
+#!/bin/sh
+return 0
+BTNEOF
+
     # Clean up old rc.local entry if present
     if grep -q 'toggle_podkop init' /etc/rc.local 2>/dev/null; then
         sed -i '/toggle_podkop init/d' /etc/rc.local 2>/dev/null
